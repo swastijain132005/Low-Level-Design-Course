@@ -96,7 +96,9 @@ int main() {
     ShoppingCartPrinter* printer = new ShoppingCartPrinter(cart);
     printer->printInvoice();
 
-    Persistence* db = new SQLPersistence();
+    
+
+    Persistence* db = new SQLPersistence();// it does not create an object of persistence it craetes sqlpersistence object and stores its adress in persistence pointer
     Persistence* mongo = new MongoPersistence();
     Persistence* file = new FilePersistence();
 

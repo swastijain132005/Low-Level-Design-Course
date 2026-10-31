@@ -1,121 +1,50 @@
 #include <iostream>
-#include <vector>
-#include <typeinfo>
-#include <stdexcept>
-
 using namespace std;
 
-
-class DepositOnlyAccount {
+class Account {
 public:
-    virtual void deposit(double amount) = 0;
+    virtual void deposit(int amount) = 0;
 };
 
-class WithdrawableAccount : public DepositOnlyAccount {
+class WithdrawableAccount : public Account {
 public:
-    virtual void withdraw(double amount) = 0;
+    virtual void withdraw(int amount) = 0;
 };
 
-class SavingAccount : public WithdrawableAccount {
-private:
-    double balance;
-
+class SavingsAccount : public WithdrawableAccount {
 public:
-    SavingAccount() { 
-        balance = 0; 
+    void deposit(int amount) override {
+        cout << "Savings: Deposit " << amount << endl;
     }
 
-    void deposit(double amount) {
-        balance += amount;
-        cout << "Deposited: " << amount << " in Savings Account. New Balance: " << balance << endl;
-    }
-
-    void withdraw(double amount) {
-        if (balance >= amount) {
-            balance -= amount;
-            cout << "Withdrawn: " << amount << " from Savings Account. New Balance: " << balance << endl;
-        } else {
-            cout << "Insufficient funds in Savings Account!\n";
-        }
+    void withdraw(int amount) override {
+        cout << "Savings: Withdraw " << amount << endl;
     }
 };
 
-class CurrentAccount : public WithdrawableAccount {
-    private:
-        double balance;
-    
-    public:
-        CurrentAccount() { 
-            balance = 0; 
-        }
-    
-        void deposit(double amount) {
-            balance += amount;
-            cout << "Deposited: " << amount << " in Current Account. New Balance: " << balance << endl;
-        }
-    
-        void withdraw(double amount) {
-            if (balance >= amount) {
-                balance -= amount;
-                cout << "Withdrawn: " << amount << " from Current Account. New Balance: " << balance << endl;
-            } else {
-                cout << "Insufficient funds in Current Account!\n";
-            }
-        }
-    };
-
-class FixedTermAccount : public DepositOnlyAccount {
-private:
-    double balance;
-
+class FixedDepositAccount : public Account {
 public:
-    FixedTermAccount() { 
-        balance = 0; 
-    }
-
-    void deposit(double amount) {
-        balance += amount;
-        cout << "Deposited: " << amount << " in Fixed Term Account. New Balance: " << balance << endl;
+    void deposit(int amount) override {
+        cout << "Fixed Deposit: Deposit " << amount << endl;
     }
 };
 
-class BankClient {
-private:
-    vector<WithdrawableAccount*> withdrawableAccounts;
-    vector<DepositOnlyAccount*> depositOnlyAccounts;
-
-public:
-    BankClient( vector<WithdrawableAccount*> withdrawableAccounts, 
-        vector<DepositOnlyAccount*> depositOnlyAccounts) { 
-        this->withdrawableAccounts = withdrawableAccounts; 
-        this->depositOnlyAccounts = depositOnlyAccounts;
-    }
-
-    void processTransactions() {
-        for (WithdrawableAccount* acc : withdrawableAccounts) {
-            acc->deposit(1000);
-            acc->withdraw(500); 
-        }
-        for (DepositOnlyAccount* acc : depositOnlyAccounts) {
-            acc->deposit(5000);
-        }
-    }
-};
+// Only accounts supporting withdrawal are passed here
+void processWithdrawal(WithdrawableAccount* acc) {
+    acc->withdraw(500);
+}
 
 int main() {
-    vector<WithdrawableAccount*> withdrawableAccounts;
-    withdrawableAccounts.push_back(new SavingAccount());
-    withdrawableAccounts.push_back(new CurrentAccount());
 
-    vector<DepositOnlyAccount*> depositOnlyAccounts;
-    depositOnlyAccounts.push_back(new FixedTermAccount());
+    SavingsAccount s;
+    FixedDepositAccount f;
 
-    BankClient* client = new BankClient (withdrawableAccounts, depositOnlyAccounts);
-    client->processTransactions();
+    s.deposit(1000);
+    f.deposit(1000);
+
+    processWithdrawal(&s);
+
+    // processWithdrawal(&f); // Not allowed!
 
     return 0;
 }
-
-    
-    
-    

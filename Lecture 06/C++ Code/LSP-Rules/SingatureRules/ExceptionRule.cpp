@@ -1,3 +1,5 @@
+
+
 #include <iostream>
 
 using namespace std;
@@ -20,48 +22,45 @@ using namespace std;
 │   ├── std::underflow_error   
 */
 
+#include <iostream>
+#include <stdexcept>
+using namespace std;
+
 class Parent {
 public:
-    virtual void getValue() noexcept(false) { // Parent throws logic_error exception
+    virtual void getValue() {
         throw logic_error("Parent error");
     }
 };
 
 class Child : public Parent {
 public:
-    void getValue() noexcept(false)  override { // Child throws out_of_range exception
+    void getValue() override {
         throw out_of_range("Child error");
-        // throw runtime_error("Child Error"); // This is Wrong
-    }
-};
-
-class Client {
-private:
-    Parent* p;
-
-public:
-    Client(Parent* p) {
-        this->p = p;
-    }
-    void takeValue() {
-        try {
-            p->getValue();
-        }
-        catch(const logic_error& e) {
-            cout << "Logic error exception occured : " << e.what() << endl;
-        }
     }
 };
 
 int main() {
-    Parent* parent = new Parent();
-    Child* child = new Child();
+    Parent p;
+    Child c;
 
-    Client* client = new Client(parent);
-    //Client* client = new Client(child);
+    Parent* obj = &p;
 
-    client->takeValue();
+    try {
+        obj->getValue();
+    }
+    catch (const logic_error& e) {
+        cout << e.what() << endl;
+    }
+
+    obj = &c;
+
+    try {
+        obj->getValue();
+    }
+    catch (const logic_error& e) {
+        cout << e.what() << endl;
+    }
 
     return 0;
 }
-    

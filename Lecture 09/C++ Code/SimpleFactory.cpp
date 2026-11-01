@@ -29,6 +29,7 @@ public:
     }
 };
 
+//ab user sirf burger ka type bataega use object nhi banana hai
 class BurgerFactory {
 public:
     Burger* createBurger(string& type) {
@@ -46,6 +47,8 @@ public:
 };
 
 int main() {
+
+
     string type = "standard";
 
     BurgerFactory* myBurgerFactory = new BurgerFactory();

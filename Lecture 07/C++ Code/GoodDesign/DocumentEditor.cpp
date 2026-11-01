@@ -63,6 +63,8 @@ private:
     vector<DocumentElement*> documentElements;
 
 public:
+
+// document element mein jiska object daaloge wo aa jaega firr render mein usi element ka rneder method call hoga 
     void addElement(DocumentElement* element) {
         documentElements.push_back(element);
     }
@@ -107,6 +109,7 @@ public:
 };
 
 // DocumentEditor class managing client interactions
+//document editor ke paas persistence aurr document ka object hai aurr wo constructor se initialize ho rahe hai ,document ke paas add element hai jo  idhar se objects lega
 class DocumentEditor {
 private:
     Document* document;
@@ -118,6 +121,8 @@ public:
         this->document = document;
         this->storage = storage;
     }
+
+//editor delegating its responsibilty to document via addelement , document delegating its responsibility to documentelement via render
 
     void addText(string text) {
         document->addElement(new TextElement(text));

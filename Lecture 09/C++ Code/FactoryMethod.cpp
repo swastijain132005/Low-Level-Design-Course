@@ -1,3 +1,4 @@
+//ab isme factory hi 2 ho jaenge 
 #include <iostream>
 
 using namespace std;

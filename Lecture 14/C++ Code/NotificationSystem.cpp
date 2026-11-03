@@ -1,299 +1,268 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <algorithm>
 
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
 using namespace std;
 
-/*============================
-      Notification & Decorators
-=============================*/
+// ========== DECORATOR PATTERN ==========
 
+// Common interface
 class INotification {
 public:
     virtual string getContent() const = 0;
-
-    virtual ~INotification() {}
+    virtual ~INotification() = default;
 };
 
-// Concrete Notification: simple text notification.
+// Original notification
 class SimpleNotification : public INotification {
-private:
-    string text;
+    string message;
+
 public:
-    SimpleNotification(const string& msg) {
-        text = msg;
+    SimpleNotification(string msg) {
+        message = msg;
     }
+
     string getContent() const override {
-        return text;
+        return message;
     }
 };
 
-// Abstract Decorator: wraps a Notification object.
-class INotificationDecorator : public INotification {
+// Parent decorator
+class NotificationDecorator : public INotification {
 protected:
     INotification* notification;
+
 public:
-    INotificationDecorator(INotification* n) {
+    NotificationDecorator(INotification* n) {
         notification = n;
     }
-    virtual ~INotificationDecorator() {
+
+    virtual ~NotificationDecorator() {
         delete notification;
     }
 };
 
-// Decorator to add a timestamp to the content.
-class TimestampDecorator : public INotificationDecorator {
+// Adds timestamp
+class TimestampDecorator : public NotificationDecorator {
 public:
-    TimestampDecorator(INotification* n) : INotificationDecorator(n) { }
-    
+TimestampDecorator(INotification* n) {
+    notification = n;
+}
     string getContent() const override {
-        return "[2025-04-13 14:22:00] " + notification->getContent();
+        return "[2026-11-03 10:00] " + notification->getContent();
     }
 };
 
-// Decorator to append a signature to the content.
-class SignatureDecorator : public INotificationDecorator {
-private:
+// Adds signature
+class SignatureDecorator : public NotificationDecorator {
     string signature;
+
 public:
-    SignatureDecorator(INotification* n, const string& sig) : INotificationDecorator(n) {
-        signature = sig;
-    }
+ SignatureDecorator(INotification* n, string sig) {
+    notification = n;
+    signature = sig;
+}
+
     string getContent() const override {
-        return notification->getContent() + "\n-- " + signature + "\n\n";
+        return notification->getContent() + "\n-- " + signature;
     }
 };
 
-/*============================
-  Observer Pattern Components
-=============================*/
 
-// Observer interface: each observer gets an update with a Notification pointer.
+// ========== OBSERVER PATTERN ==========
+
 class IObserver {
 public:
     virtual void update() = 0;
-
-    virtual ~IObserver() {}
+    virtual ~IObserver() = default;
 };
 
-class IObservable {
-public:
-    virtual void addObserver(IObserver* observer) = 0;
-    virtual void removeObserver(IObserver* observer) = 0;
-    virtual void notifyObservers() = 0;
-};
-
-// Concrete Observable
-class NotificationObservable :  public IObservable {
-private:
+class NotificationObservable {
     vector<IObserver*> observers;
-    INotification* currentNotification;
-public:
-    NotificationObservable() { 
-        currentNotification = nullptr; 
-    }
+    INotification* currentNotification = nullptr;
 
-    void addObserver(IObserver* obs) override {
+public:
+    void addObserver(IObserver* obs) {
         observers.push_back(obs);
     }
 
-    void removeObserver(IObserver* obs) override {
-        observers.erase(remove(observers.begin(), observers.end(), obs), observers.end());
+    void removeObserver(IObserver* obs) {
+        observers.erase(
+            remove(observers.begin(), observers.end(), obs),
+            observers.end()
+        );
     }
 
-    void notifyObservers() override {
-        for (unsigned int i = 0; i < observers.size(); i++) {
-            observers[i]->update();
+    void setNotification(INotification* n) {
+        delete currentNotification;
+        currentNotification = n;
+
+        for (IObserver* obs : observers) {
+            obs->update();
         }
     }
 
-    void setNotification(INotification* notification) {
-        if (currentNotification != nullptr) {
-            delete currentNotification;
-        }
-        currentNotification = notification;
-        notifyObservers();
-    }
-
-    INotification* getNotification() {
-        return currentNotification;
-    }
-
-    string getNotificationContent() {
+    string getNotificationContent() const {
         return currentNotification->getContent();
     }
 
     ~NotificationObservable() {
-        if (currentNotification != NULL) {
-            delete currentNotification;
-        }
+        delete currentNotification;
     }
 };
-    
-// Concrete Observer 1
+
+
+// Observer 1: Logger
 class Logger : public IObserver {
-private:
-    NotificationObservable* notificationObservable;
-
-public:
-    Logger(NotificationObservable* observable) {
-        this->notificationObservable = observable;
-    }
-
-    void update() {
-        cout << "Logging New Notification : \n" << notificationObservable->getNotificationContent();
-    }
-};
-
-/*============================
-  Strategy Pattern Components (Concrete Observer 2)
-=============================*/
-
-// Abstract class for different Notification Strategies.
-class INotificationStrategy {
-public:    
-    virtual void sendNotification(string content) = 0;
-};
-
-class EmailStrategy : public INotificationStrategy {
-private:
-    string emailId;
-public:
-
-    EmailStrategy(string emailId) {
-        this->emailId = emailId;
-    }
-
-    void sendNotification(string content) override {
-        // Simulate the process of sending an email notification, 
-        // representing the dispatch of messages to users via email.​
-        cout << "Sending email Notification to: " << emailId << "\n" << content;
-    }
-};
-
-class SMSStrategy : public INotificationStrategy {
-private:
-    string mobileNumber;
-public:
-
-    SMSStrategy(string mobileNumber) {
-        this->mobileNumber = mobileNumber;
-    }
-
-    void sendNotification(string content) override {
-        // Simulate the process of sending an SMS notification, 
-        // representing the dispatch of messages to users via SMS.​
-        cout << "Sending SMS Notification to: " << mobileNumber << "\n" << content;
-    }
-};
-
-class PopUpStrategy : public INotificationStrategy {
-public:
-    void sendNotification(string content) override {
-        // Simulate the process of sending popup notification.
-        cout << "Sending Popup Notification: \n" << content;
-    }
-};
-
-class NotificationEngine : public IObserver {
-private:
-    NotificationObservable* notificationObservable;
-    vector<INotificationStrategy*> notificationStrategies;
-
-public:
-    NotificationEngine(NotificationObservable* observable) {
-        this->notificationObservable = observable;
-    }
-
-    void addNotificationStrategy(INotificationStrategy* ns) {
-        this->notificationStrategies.push_back(ns);
-    }
-
-    // Can have RemoveNotificationStrategy as well.
-
-    void update() {
-        string notificationContent = notificationObservable->getNotificationContent();
-        for(const auto notificationStrategy : notificationStrategies) {
-            notificationStrategy->sendNotification(notificationContent);
-        }
-    }
-};
-
-/*============================
-       NotificationService
-=============================*/
-
-// The NotificationService manages notifications. It keeps track of notifications. 
-// Any client code will interact with this service.
-
-// Singleton class
-class NotificationService {
-private:
     NotificationObservable* observable;
-    static NotificationService* instance;
-    vector<INotification*> notifications;
-
-    NotificationService() {
-        // private constructor
-        observable = new NotificationObservable();
-    }
 
 public:
-    static NotificationService* getInstance() {
-        if(instance == nullptr) {
-            instance = new NotificationService();
+    Logger(NotificationObservable* o) {
+        observable = o;
+    }
+
+    void update() override {
+        cout << "\nLogging notification:\n";
+        cout << observable->getNotificationContent() << "\n";
+    }
+};
+
+
+// ========== STRATEGY PATTERN ==========
+
+class INotificationStrategy {
+public:
+    virtual void sendNotification(const string& content) = 0;
+    virtual ~INotificationStrategy() = default;
+};
+
+// Email strategy
+class EmailStrategy : public INotificationStrategy {
+    string email;
+
+public:
+    EmailStrategy(string e) {
+        email = e;
+    }
+
+    void sendNotification(const string& content) override {
+        cout << "\nSending Email to " << email << "\n";
+        cout << content << "\n";
+    }
+};
+
+// SMS strategy
+class SMSStrategy : public INotificationStrategy {
+    string mobile;
+
+public:
+    SMSStrategy(string m) {
+        mobile = m;
+    }
+
+    void sendNotification(const string& content) override {
+        cout << "\nSending SMS to " << mobile << "\n";
+        cout << content << "\n";
+    }
+};
+
+// Popup strategy
+class PopupStrategy : public INotificationStrategy {
+public:
+    void sendNotification(const string& content) override {
+        cout << "\nShowing Popup:\n";
+        cout << content << "\n";
+    }
+};
+
+
+// Observer 2: Notification Engine
+class NotificationEngine : public IObserver {
+    NotificationObservable* observable;
+    vector<INotificationStrategy*> strategies;
+
+public:
+    NotificationEngine(NotificationObservable* o) {
+        observable = o;
+    }
+
+    void addStrategy(INotificationStrategy* s) {
+        strategies.push_back(s);
+    }
+
+    void update() override {
+        string content = observable->getNotificationContent();
+
+        for (auto s : strategies) {
+            s->sendNotification(content);
         }
+    }
+
+    ~NotificationEngine() {
+        for (auto s : strategies) {
+            delete s;
+        }
+    }
+};
+
+
+// ========== SINGLETON PATTERN ==========
+
+class NotificationService {
+    NotificationObservable observable;
+
+    NotificationService() {}
+
+public:
+    static NotificationService& getInstance() {
+        static NotificationService instance;
         return instance;
     }
 
-    // Expose the observable so observers can attach.
     NotificationObservable* getObservable() {
-        return observable;
+        return &observable;
     }
 
-    // Creates a new Notification and notifies observers.
-    void sendNotification(INotification* notification) {
-        notifications.push_back(notification); // history
-        observable->setNotification(notification);
-    }
-
-    ~NotificationService() {
-        delete observable;
+    void sendNotification(INotification* n) {
+        observable.setNotification(n);
     }
 };
 
-NotificationService* NotificationService::instance = nullptr;
+
+// ========== MAIN ==========
 
 int main() {
-    // Create NotificationService.
-    NotificationService* notificationService = NotificationService::getInstance();
 
-    // Get Observable
-    NotificationObservable* notificationObservable = notificationService->getObservable();
-   
-    // Create Logger Observer
-    Logger* logger = new Logger(notificationObservable);
+    // Get the single NotificationService object
+    NotificationService& service = NotificationService::getInstance();
 
-    // Create NotificationEngine observers.
-    NotificationEngine* notificationEngine = new NotificationEngine(notificationObservable);
+    // Get observable
+    NotificationObservable* observable = service.getObservable();
 
-    notificationEngine->addNotificationStrategy(new EmailStrategy("random.person@gmail.com"));
-    notificationEngine->addNotificationStrategy(new SMSStrategy("+91 9876543210"));
-    notificationEngine->addNotificationStrategy(new PopUpStrategy());
+    // Create observers
+    Logger logger(observable);
+    NotificationEngine engine(observable);
 
-    // Attach these observers.
-    notificationObservable->addObserver(logger);
-    notificationObservable->addObserver(notificationEngine);
+    // Add delivery strategies
+    engine.addStrategy(new EmailStrategy("user@gmail.com"));
+    engine.addStrategy(new SMSStrategy("+91 9876543210"));
+    engine.addStrategy(new PopupStrategy());
 
-    // Create a notification with decorators.
-    INotification* notification = new SimpleNotification("Your order has been shipped!");
+    // Register observers
+    observable->addObserver(&logger);
+    observable->addObserver(&engine);
+
+    // Create notification
+    INotification* notification =
+        new SimpleNotification("Your order has been shipped!");
+
+    // Add decorators
     notification = new TimestampDecorator(notification);
     notification = new SignatureDecorator(notification, "Customer Care");
-    
-    notificationService->sendNotification(notification);
 
-    delete logger;
-    delete notificationEngine;
+    // Send notification
+    service.sendNotification(notification);
+
     return 0;
 }
